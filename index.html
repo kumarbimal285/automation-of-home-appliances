@@ -17,3 +17,243 @@
     </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Home Control System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .appliance-card {
+            animation: fadeIn 0.5s ease-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-6 shadow-2xl border border-white/20">
+            <div class="flex items-center justify-between mb-4 flex-wrap gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-white mb-2">Smart Home Control</h1>
+                    <p class="text-purple-200">Manage your home appliances remotely</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full">
+                        <span class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></span>
+                        <span class="text-white text-sm">Connected</span>
+                    </div>
+                    <button class="p-3 bg-white/10 rounded-full hover:bg-white/20 transition">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-3 gap-4">
+                <div class="bg-gradient-to-br from-green-500/20 to-green-600/20 p-4 rounded-xl border border-green-500/30">
+                    <p class="text-green-200 text-sm mb-1">Active Devices</p>
+                    <p id="active-count" class="text-3xl font-bold text-white">2</p>
+                </div>
+                <div class="bg-gradient-to-br from-blue-500/20 to-blue-600/20 p-4 rounded-xl border border-blue-500/30">
+                    <p class="text-blue-200 text-sm mb-1">Total Devices</p>
+                    <p class="text-3xl font-bold text-white">10</p>
+                </div>
+                <div class="bg-gradient-to-br from-purple-500/20 to-purple-600/20 p-4 rounded-xl border border-purple-500/30">
+                    <p class="text-purple-200 text-sm mb-1">Rooms</p>
+                    <p class="text-3xl font-bold text-white">5</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Room Filter -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-4 mb-6 shadow-2xl border border-white/20">
+            <div id="room-filters" class="flex gap-2 overflow-x-auto pb-2"></div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-4 mb-6 shadow-2xl border border-white/20">
+            <h2 class="text-white font-semibold mb-3">Quick Actions</h2>
+            <div class="flex gap-3">
+                <button onclick="toggleAll(true)" class="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white py-3 rounded-xl font-medium hover:from-green-600 hover:to-green-700 transition">
+                    Turn All ON
+                </button>
+                <button onclick="toggleAll(false)" class="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white py-3 rounded-xl font-medium hover:from-red-600 hover:to-red-700 transition">
+                    Turn All OFF
+                </button>
+            </div>
+        </div>
+
+        <!-- Appliances Grid -->
+        <div id="appliances-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </div>
+
+    <script>
+        const appliances = [
+            { id: 1, name: 'Living Room Light', icon: 'lightbulb', status: false, room: 'Living Room' },
+            { id: 2, name: 'Bedroom Light', icon: 'lightbulb', status: false, room: 'Bedroom' },
+            { id: 3, name: 'Kitchen Light', icon: 'lightbulb', status: true, room: 'Kitchen' },
+            { id: 4, name: 'AC', icon: 'wind', status: false, room: 'Living Room', temp: 24 },
+            { id: 5, name: 'TV', icon: 'tv', status: false, room: 'Living Room' },
+            { id: 6, name: 'Smart Speaker', icon: 'speaker', status: false, room: 'Bedroom' },
+            { id: 7, name: 'Water Heater', icon: 'droplet', status: false, room: 'Bathroom' },
+            { id: 8, name: 'Coffee Maker', icon: 'coffee', status: false, room: 'Kitchen' },
+            { id: 9, name: 'Washing Machine', icon: 'washing', status: false, room: 'Utility' },
+            { id: 10, name: 'Refrigerator', icon: 'fridge', status: true, room: 'Kitchen' },
+        ];
+
+        const rooms = ['All', 'Living Room', 'Bedroom', 'Kitchen', 'Bathroom', 'Utility'];
+        let selectedRoom = 'All';
+
+        const icons = {
+            lightbulb: '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>',
+            wind: '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.121 15.536c-1.171 1.952-3.07 1.952-4.242 0-1.172-1.953-1.172-5.119 0-7.072 1.171-1.952 3.07-1.952 4.242 0M8 10.5h4m-4 3h4m9-1.5a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>',
+            tv: '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>',
+            speaker: '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>',
+            droplet: '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path></svg>',
+            coffee: '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>',
+            washing: '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="13" r="4" stroke-width="2"></circle><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4h16v16H4V4z"></path></svg>',
+            fridge: '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2zM5 12h14M9 6v3M9 15v3"></path></svg>',
+        };
+
+        function getIcon(type) {
+            return icons[type] || icons.lightbulb;
+        }
+
+        function toggleAppliance(id) {
+            const appliance = appliances.find(a => a.id === id);
+            if (appliance) {
+                appliance.status = !appliance.status;
+                renderAppliances();
+                updateStats();
+            }
+        }
+
+        function changeTemp(id, delta) {
+            const appliance = appliances.find(a => a.id === id);
+            if (appliance && appliance.temp !== undefined) {
+                appliance.temp = Math.max(16, Math.min(30, appliance.temp + delta));
+                renderAppliances();
+            }
+        }
+
+        function toggleAll(turnOn) {
+            appliances.forEach(app => app.status = turnOn);
+            renderAppliances();
+            updateStats();
+        }
+
+        function setRoom(room) {
+            selectedRoom = room;
+            renderRoomFilters();
+            renderAppliances();
+        }
+
+        function updateStats() {
+            const activeCount = appliances.filter(a => a.status).length;
+            document.getElementById('active-count').textContent = activeCount;
+        }
+
+        function renderRoomFilters() {
+            const container = document.getElementById('room-filters');
+            container.innerHTML = rooms.map(room => `
+                <button 
+                    onclick="setRoom('${room}')"
+                    class="px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap transition ${
+                        selectedRoom === room
+                            ? 'bg-purple-500 text-white shadow-lg'
+                            : 'bg-white/10 text-purple-200 hover:bg-white/20'
+                    }"
+                >
+                    ${room}
+                </button>
+            `).join('');
+        }
+
+        function renderAppliances() {
+            const container = document.getElementById('appliances-grid');
+            const filtered = selectedRoom === 'All' 
+                ? appliances 
+                : appliances.filter(a => a.room === selectedRoom);
+
+            container.innerHTML = filtered.map(app => `
+                <div class="appliance-card bg-white/10 backdrop-blur-lg rounded-2xl p-6 shadow-2xl border transition-all ${
+                    app.status ? 'border-purple-400 bg-white/15' : 'border-white/20'
+                }">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="p-3 rounded-xl ${
+                                app.status ? 'bg-purple-500 shadow-lg shadow-purple-500/50' : 'bg-white/10'
+                            }">
+                                <div class="${app.status ? 'text-white' : 'text-gray-400'}">
+                                    ${getIcon(app.icon)}
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="text-white font-semibold">${app.name}</h3>
+                                <p class="text-purple-200 text-sm">${app.room}</p>
+                            </div>
+                        </div>
+                        <button 
+                            onclick="toggleAppliance(${app.id})"
+                            class="p-2 rounded-full transition ${
+                                app.status ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-600 hover:bg-gray-700'
+                            }"
+                        >
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728m-9.9-2.829a5 5 0 010-7.07m7.072 0a5 5 0 010 7.07M13 12a1 1 0 11-2 0 1 1 0 012 0z"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    ${app.temp !== undefined ? `
+                        <div class="bg-white/10 rounded-xl p-3 mt-3">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-purple-200 text-sm">Temperature</span>
+                                <span class="text-white font-semibold">${app.temp}°C</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <button 
+                                    onclick="changeTemp(${app.id}, -1)"
+                                    ${!app.status ? 'disabled' : ''}
+                                    class="flex-1 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2 rounded-lg transition"
+                                >
+                                    -
+                                </button>
+                                <button 
+                                    onclick="changeTemp(${app.id}, 1)"
+                                    ${!app.status ? 'disabled' : ''}
+                                    class="flex-1 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2 rounded-lg transition"
+                                >
+                                    +
+                                </button>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <div class="mt-3 pt-3 border-t border-white/10">
+                        <span class="text-sm font-medium ${
+                            app.status ? 'text-green-400' : 'text-gray-400'
+                        }">
+                            ${app.status ? '● Active' : '○ Inactive'}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Initialize
+        renderRoomFilters();
+        renderAppliances();
+        updateStats();
+    </script>
+</body>
+</html>
